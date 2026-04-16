@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,6 +7,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request) {
   try {
+    const db = (await import('@/lib/db')).default;
     const { searchParams } = new URL(request.url);
     const week = searchParams.get('week');
     const name = searchParams.get('name');
@@ -42,6 +42,7 @@ export async function GET(request) {
  */
 export async function POST(request) {
   try {
+    const db = (await import('@/lib/db')).default;
     const body = await request.json();
     const tasks = Array.isArray(body) ? body : [body];
 
@@ -89,6 +90,7 @@ export async function POST(request) {
  */
 export async function DELETE(request) {
   try {
+    const db = (await import('@/lib/db')).default;
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     

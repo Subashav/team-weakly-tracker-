@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import db from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
+    const db = (await import('@/lib/db')).default;
     const members = db.prepare('SELECT * FROM members ORDER BY name COLLATE NOCASE').all();
     console.log(`Fetched ${members.length} members from DB`);
     return NextResponse.json(members);
@@ -16,6 +16,7 @@ export async function GET() {
 
 export async function POST(request) {
   try {
+    const db = (await import('@/lib/db')).default;
     const { name, role } = await request.json();
     console.log('Adding member:', { name, role });
     if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
@@ -33,6 +34,7 @@ export async function POST(request) {
 
 export async function DELETE(request) {
   try {
+    const db = (await import('@/lib/db')).default;
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     console.log('Deleting member ID:', id);
