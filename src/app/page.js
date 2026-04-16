@@ -22,7 +22,8 @@ import {
   RefreshCw,
   Download,
   LayoutDashboard,
-  LogOut
+  LogOut,
+  Home
 } from 'lucide-react';
 import StarBorder from '../components/StarBorder';
 import Bubbles from '../components/Bubbles';
@@ -155,6 +156,16 @@ export default function TeamTracker() {
             <h2 style={{ fontSize: '1rem', fontWeight: '800' }}>A#100210</h2>
             <div className="label-small">OPERATIONS MANAGEMENT</div>
           </div>
+        </div>
+
+        {/* Page Tabs */}
+        <div style={{ display: 'flex', gap: '4px', background: 'rgba(3,7,18,0.5)', padding: '4px', borderRadius: '10px' }}>
+          <button onClick={() => router.push('/home')} className="btn btn-secondary" style={{ padding: '8px 20px', fontSize: '0.75rem', border: 'none' }}>
+            <Home size={14} /> Home
+          </button>
+          <button className="btn btn-primary" style={{ padding: '8px 20px', fontSize: '0.75rem', border: 'none' }}>
+            <LayoutDashboard size={14} /> Dashboard
+          </button>
         </div>
 
         <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>

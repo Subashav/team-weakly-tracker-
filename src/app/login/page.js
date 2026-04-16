@@ -75,7 +75,7 @@ export default function LoginPage() {
       if (res.ok) {
         // Safe persistence for this project level
         localStorage.setItem('auth_user', JSON.stringify(data));
-        router.push('/');
+        router.push('/home');
       } else {
         setError(data.error);
       }
