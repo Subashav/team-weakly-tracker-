@@ -25,7 +25,7 @@ import {
   LogOut
 } from 'lucide-react';
 import StarBorder from '../components/StarBorder';
-import StarField from '../components/StarField';
+import Bubbles from '../components/Bubbles';
 
 export default function TeamTracker() {
   const router = useRouter();
@@ -144,8 +144,8 @@ export default function TeamTracker() {
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh' }}>
-      {/* Subtle drifting star background */}
-      <StarField starCount={180} speed={0.12} opacity={0.18} maxSize={1.2} />
+      {/* Floating bubbles background */}
+      <Bubbles />
     <div className="container" style={{ position: 'relative', zIndex: 1 }}>
       {/* Enterprise Navigation */}
       <nav className="glass-card animate-fade-in" style={{ padding: '0.75rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
