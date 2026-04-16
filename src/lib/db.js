@@ -1,14 +1,23 @@
-import { sql } from '@vercel/postgres';
+import pg from 'pg';
+const { Pool } = pg;
 
 /**
- * DATABASE INITIALIZATION
- * This function ensures the required tables exist in the Vercel Postgres instance.
- * Note: Postgres uses slightly different syntax than SQLite (SERIAL vs AUTOINCREMENT).
+ * DATABASE PROFILING
+ * We use the 'pg' library which is the industry standard for Postgres.
+ * It works perfectly with Supabase's connection strings.
  */
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL,
+  ssl: {
+    rejectUnauthorized: false // Required for Supabase/Vercel SSL connections
+  }
+});
+
 export async function initDatabase() {
+  const client = await pool.connect();
   try {
     // Initialize Tasks Table
-    await sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS tasks (
         id SERIAL PRIMARY KEY,
         roll_no TEXT,
@@ -21,21 +30,23 @@ export async function initDatabase() {
         is_hidden INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `;
+    `);
 
     // Initialize Members Table
-    await sql`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS members (
         id SERIAL PRIMARY KEY,
         name TEXT UNIQUE,
         role TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `;
-    console.log('Postgres tables verified/created successfully.');
+    `);
+    console.log('Postgres (pg) tables verified/created successfully.');
   } catch (error) {
     console.error('Database Initialization Error:', error);
+  } finally {
+    client.release();
   }
 }
 
-export default sql;
+export default pool;
