@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   Plus, 
   Trash2, 
@@ -23,7 +23,8 @@ import {
   Download,
   LayoutDashboard,
   LogOut,
-  Home
+  Home,
+  ExternalLink
 } from 'lucide-react';
 import StarBorder from '../components/StarBorder';
 
@@ -60,12 +61,15 @@ export default function TeamTracker() {
     setUser(loggedInUser);
     setIsAdmin(loggedInUser.role === 'admin');
     
-    fetchInitialData(loggedInUser.role === 'admin');
+    const memberParam = new URLSearchParams(window.location.search).get('member');
+    if (memberParam) setSelectedUser(memberParam);
+    
+    fetchInitialData(loggedInUser.role === 'admin', memberParam || 'All Members');
   }, [router]);
 
-  const fetchInitialData = async (adminMode) => {
+  const fetchInitialData = async (adminMode, memberFilter = selectedUser) => {
     setLoading(true);
-    await Promise.all([fetchTasks(adminMode), fetchMembers()]);
+    await Promise.all([fetchTasks(adminMode, memberFilter), fetchMembers()]);
     setLoading(false);
   };
 
@@ -221,7 +225,7 @@ export default function TeamTracker() {
             <span className="label-small">ENTITY FILTER</span>
             <select className="glass-input" value={selectedUser} onChange={(e) => handleFilterUser(e.target.value)}>
               <option>All Members</option>
-              {members.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
+              {members.map(m => <option key={m.id} value={m.name}>{m.name} {m.role ? `• ${m.role}` : ''}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -250,7 +254,7 @@ export default function TeamTracker() {
           <table className="data-table">
             <thead>
               <tr style={{ background: 'rgba(255, 255, 255, 0.01)' }}>
-                {['Resource', 'Date', 'Description', 'Skill Map', 'Project ID', 'Milestone', 'Proof'].map(h => (
+                {['Resource', 'Date', 'Description', 'Skill Map', 'Project Name', 'Progress', 'Proof Link'].map(h => (
                   <th key={h} style={{ textAlign: 'left', letterSpacing: '-0.2px' }}>{h}</th>
                 ))}
                 {isAdmin && <th></th>}
@@ -262,19 +266,28 @@ export default function TeamTracker() {
                   <td>
                     <select disabled={!isAdmin} className="glass-input" style={{ width: '140px', background: 'transparent', border: 'none', fontWeight: '700', color: 'var(--primary-accent)', fontSize: '0.8rem' }} value={t.roll_no} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, roll_no: e.target.value } : x)); setHasUnsavedChanges(true); }}>
                       <option value="">Unassigned</option>
-                      {members.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
+                      {members.map(m => <option key={m.id} value={m.name}>{m.name} {m.role ? `• ${m.role}` : ''}</option>)}
                     </select>
                   </td>
                   <td><input type="date" readOnly={!isAdmin} className="glass-input" style={{ width: '120px', background: 'none', border: 'none', fontSize: '0.8rem' }} value={t.week_date} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, week_date: e.target.value } : x)); setHasUnsavedChanges(true); }} /></td>
                   <td><input readOnly={!isAdmin} className="glass-input" style={{ width: '300px', background: 'none', border: 'none' }} placeholder="..." value={t.task_description} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, task_description: e.target.value } : x)); setHasUnsavedChanges(true); }} /></td>
                   <td><input readOnly={!isAdmin} className="glass-input" style={{ width: '150px', background: 'none', border: 'none' }} placeholder="..." value={t.skill_applied} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, skill_applied: e.target.value } : x)); setHasUnsavedChanges(true); }} /></td>
-                  <td><input readOnly={!isAdmin} className="glass-input" style={{ width: '150px', background: 'none', border: 'none' }} placeholder="..." value={t.project_name} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, project_name: e.target.value } : x)); setHasUnsavedChanges(true); }} /></td>
+                  <td><input readOnly={!isAdmin} className="glass-input" style={{ width: '180px', background: 'none', border: 'none' }} placeholder="Enter Project Name..." value={t.project_name} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, project_name: e.target.value } : x)); setHasUnsavedChanges(true); }} /></td>
                   <td>
                     <select disabled={!isAdmin} className="glass-input" style={{ background: 'rgba(255,255,255,0.03)', fontSize: '0.75rem', fontWeight: 'bold' }} value={t.progress} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, progress: e.target.value } : x)); setHasUnsavedChanges(true); }}>
                       <option value="Pending">Pending</option><option value="In Progress">In Progress</option><option value="Completed">Completed</option>
                     </select>
                   </td>
-                  <td><input readOnly={!isAdmin} className="glass-input" style={{ width: '140px', background: 'none', border: 'none', color: 'var(--primary-accent)', textDecoration: 'underline' }} value={t.proof} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, proof: e.target.value } : x)); setHasUnsavedChanges(true); }} /></td>
+                  <td>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <input readOnly={!isAdmin} className="glass-input" style={{ width: '140px', background: 'none', border: 'none', color: 'var(--primary-accent)', textDecoration: 'underline' }} placeholder="Link..." value={t.proof} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, proof: e.target.value } : x)); setHasUnsavedChanges(true); }} />
+                      {t.proof?.startsWith('http') && (
+                        <a href={t.proof} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-accent)', display: 'flex', alignItems: 'center' }} title="Open Link">
+                          <ExternalLink size={16} />
+                        </a>
+                      )}
+                    </div>
+                  </td>
                   {isAdmin && (
                     <td>
                       <div style={{ display: 'flex', gap: '12px' }}>
