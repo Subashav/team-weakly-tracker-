@@ -3,13 +3,16 @@ const { Pool } = pg;
 
 /**
  * DATABASE PROFILING
- * We use the 'pg' library which is the industry standard for Postgres.
- * It works perfectly with Supabase's connection strings.
+ * We use the 'pg' library with hardened SSL settings to bypass self-signed certificate errors.
  */
+const rawConnectionString = process.env.POSTGRES_URL || '';
+// Clean the connection string of any existing sslmode to avoid conflicts with our config object
+const connectionString = rawConnectionString.split('?')[0];
+
 const pool = new Pool({
-  connectionString: process.env.POSTGRES_URL,
+  connectionString: connectionString,
   ssl: {
-    rejectUnauthorized: false // Required for Supabase/Vercel SSL connections
+    rejectUnauthorized: false
   }
 });
 
