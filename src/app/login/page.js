@@ -99,7 +99,7 @@ export default function LoginPage() {
           <div style={{ background: 'var(--primary-accent)', width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
             <LayoutDashboard size={28} color="white" />
           </div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '0.25rem' }}>Team Tracker</h1>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: '800', marginBottom: '0.25rem' }}>A#100210</h1>
           <p className="label-small">OPERATIONS MANAGEMENT PORTAL</p>
         </div>
 

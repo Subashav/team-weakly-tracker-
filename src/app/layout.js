@@ -1,7 +1,7 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'Team Tracker | Dashboard',
+  title: 'A#100210 Dashboard',
   description: 'Manage and track your project tasks with ease.',
 };
 
