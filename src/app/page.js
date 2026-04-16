@@ -268,7 +268,7 @@ export default function TeamTracker() {
               {filteredTasks.length > 0 ? filteredTasks.map((t) => (
                 <tr key={t.id} style={{ opacity: t.is_hidden ? 0.4 : 1 }}>
                   <td>
-                    <select disabled={!isAdmin} className="glass-input" style={{ width: '140px', background: 'transparent', border: 'none', fontWeight: '700', color: 'var(--primary-accent)', fontSize: '0.8rem' }} value={t.roll_no} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, roll_no: e.target.value } : x)); setHasUnsavedChanges(true); }}>
+                    <select disabled={!isAdmin} className="glass-input" style={{ width: '180px', background: 'transparent', border: 'none', fontWeight: '700', color: 'var(--primary-accent)', fontSize: '0.85rem' }} value={t.roll_no} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, roll_no: e.target.value } : x)); setHasUnsavedChanges(true); }}>
                       <option value="">Unassigned</option>
                       {members.map(m => <option key={m.id} value={m.name}>{m.name} {m.role ? `• ${m.role}` : ''}</option>)}
                     </select>
@@ -278,7 +278,7 @@ export default function TeamTracker() {
                   <td><input readOnly={!isAdmin} className="glass-input" style={{ width: '150px', background: 'none', border: 'none' }} placeholder="..." value={t.skill_applied} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, skill_applied: e.target.value } : x)); setHasUnsavedChanges(true); }} /></td>
                   <td><input readOnly={!isAdmin} className="glass-input" style={{ width: '180px', background: 'none', border: 'none' }} placeholder="Enter Project Name..." value={t.project_name} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, project_name: e.target.value } : x)); setHasUnsavedChanges(true); }} /></td>
                   <td>
-                    <select disabled={!isAdmin} className="glass-input" style={{ background: 'rgba(255,255,255,0.03)', fontSize: '0.75rem', fontWeight: 'bold' }} value={t.progress} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, progress: e.target.value } : x)); setHasUnsavedChanges(true); }}>
+                    <select disabled={!isAdmin} className="glass-input" style={{ width: '140px', background: 'rgba(255,255,255,0.03)', fontSize: '0.8rem', fontWeight: 'bold' }} value={t.progress} onChange={(e) => { setTasks(tasks.map(x => x.id === t.id ? { ...x, progress: e.target.value } : x)); setHasUnsavedChanges(true); }}>
                       <option value="Pending">Pending</option><option value="In Progress">In Progress</option><option value="Completed">Completed</option>
                     </select>
                   </td>
