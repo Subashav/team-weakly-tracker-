@@ -25,7 +25,7 @@ import {
   LogOut
 } from 'lucide-react';
 import StarBorder from '../components/StarBorder';
-import Antigravity from '../components/Antigravity';
+import StarField from '../components/StarField';
 
 export default function TeamTracker() {
   const router = useRouter();
@@ -144,22 +144,8 @@ export default function TeamTracker() {
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh' }}>
-      {/* Subtle floating particles background */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none' }}>
-        <Antigravity
-          count={600}
-          magnetRadius={4}
-          ringRadius={5}
-          waveSpeed={0.2}
-          waveAmplitude={0.5}
-          particleSize={0.6}
-          lerpSpeed={0.03}
-          color="#ffffff"
-          autoAnimate={true}
-          particleVariance={0.5}
-          particleShape="sphere"
-        />
-      </div>
+      {/* Subtle drifting star background */}
+      <StarField starCount={180} speed={0.12} opacity={0.18} maxSize={1.2} />
     <div className="container" style={{ position: 'relative', zIndex: 1 }}>
       {/* Enterprise Navigation */}
       <nav className="glass-card animate-fade-in" style={{ padding: '0.75rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
