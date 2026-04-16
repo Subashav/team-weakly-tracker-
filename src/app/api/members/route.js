@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
+import sql, { initDatabase } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const db = (await import('@/lib/db')).default;
-    const members = db.prepare('SELECT * FROM members ORDER BY name COLLATE NOCASE').all();
-    console.log(`Fetched ${members.length} members from DB`);
-    return NextResponse.json(members);
+    await initDatabase();
+    const { rows } = await sql`SELECT * FROM members ORDER BY name ASC`;
+    console.log(`Fetched ${rows.length} members from Postgres`);
+    return NextResponse.json(rows);
   } catch (error) {
     console.error('GET Members Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -16,14 +17,18 @@ export async function GET() {
 
 export async function POST(request) {
   try {
-    const db = (await import('@/lib/db')).default;
     const { name, role } = await request.json();
     console.log('Adding member:', { name, role });
     if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
 
-    const stmt = db.prepare('INSERT OR REPLACE INTO members (name, role) VALUES (?, ?)');
-    const info = stmt.run(name, role);
-    console.log('Member saved:', info);
+    await initDatabase();
+    
+    // Postgres UPSERT syntax
+    await sql`
+      INSERT INTO members (name, role)
+      VALUES (${name}, ${role})
+      ON CONFLICT (name) DO UPDATE SET role = EXCLUDED.role
+    `;
     
     return NextResponse.json({ message: 'Member updated successfully' });
   } catch (error) {
@@ -34,14 +39,12 @@ export async function POST(request) {
 
 export async function DELETE(request) {
   try {
-    const db = (await import('@/lib/db')).default;
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
     console.log('Deleting member ID:', id);
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
 
-    const info = db.prepare('DELETE FROM members WHERE id = ?').run(id);
-    console.log('Member deleted:', info);
+    await sql`DELETE FROM members WHERE id = ${id}`;
     return NextResponse.json({ message: 'Member removed' });
   } catch (error) {
     console.error('DELETE Member Error:', error);

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import sql, { initDatabase } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,32 +8,42 @@ export const dynamic = 'force-dynamic';
  */
 export async function GET(request) {
   try {
-    const db = (await import('@/lib/db')).default;
+    await initDatabase();
     const { searchParams } = new URL(request.url);
-    const week = searchParams.get('week');
-    const name = searchParams.get('name');
+    const nameParam = searchParams.get('name');
     const isAdmin = searchParams.get('admin') === 'true';
 
-    let query = 'SELECT * FROM tasks WHERE 1=1';
-    const params = [];
-
-    if (!isAdmin) {
-      query += ' AND is_hidden = 0';
+    let rows;
+    if (isAdmin) {
+      if (nameParam && nameParam !== 'All Members') {
+        const { rows: filtered } = await sql`
+          SELECT * FROM tasks 
+          WHERE (roll_no = ${nameParam} OR project_name ILIKE ${`%${nameParam}%`}) 
+          ORDER BY week_date DESC, created_at DESC
+        `;
+        rows = filtered;
+      } else {
+        const { rows: all } = await sql`SELECT * FROM tasks ORDER BY week_date DESC, created_at DESC`;
+        rows = all;
+      }
+    } else {
+      // Viewer mode: only visible tasks
+      if (nameParam && nameParam !== 'All Members') {
+        const { rows: filtered } = await sql`
+          SELECT * FROM tasks 
+          WHERE is_hidden = 0 AND (roll_no = ${nameParam} OR project_name ILIKE ${`%${nameParam}%`}) 
+          ORDER BY week_date DESC, created_at DESC
+        `;
+        rows = filtered;
+      } else {
+        const { rows: all } = await sql`SELECT * FROM tasks WHERE is_hidden = 0 ORDER BY week_date DESC, created_at DESC`;
+        rows = all;
+      }
     }
 
-    if (week) {
-      query += ' AND week_date = ?';
-      params.push(week);
-    }
-    if (name) {
-      query += ' AND (roll_no = ? OR project_name LIKE ?)';
-      params.push(name, `%${name}%`);
-    }
-
-    query += ' ORDER BY week_date DESC, created_at DESC';
-    const tasks = db.prepare(query).all(...params);
-    return NextResponse.json(tasks);
+    return NextResponse.json(rows);
   } catch (error) {
+    console.error('GET Tasks Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -42,45 +53,39 @@ export async function GET(request) {
  */
 export async function POST(request) {
   try {
-    const db = (await import('@/lib/db')).default;
     const body = await request.json();
     const tasks = Array.isArray(body) ? body : [body];
+    await initDatabase();
 
-    const upsert = db.prepare(`
-      INSERT INTO tasks (id, roll_no, task_description, skill_applied, project_name, progress, proof, week_date, is_hidden)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        roll_no = excluded.roll_no,
-        task_description = excluded.task_description,
-        skill_applied = excluded.skill_applied,
-        project_name = excluded.project_name,
-        progress = excluded.progress,
-        proof = excluded.proof,
-        week_date = excluded.week_date,
-        is_hidden = excluded.is_hidden
-    `);
+    for (const task of tasks) {
+      // If task.id is very large (Date.now()) or null, treat as new INSERT
+      const isNew = !task.id || task.id > 1000000000000;
 
-    const transaction = db.transaction((taskList) => {
-      for (const task of taskList) {
-        const id = typeof task.id === 'string' || task.id > 1000000000000 ? null : task.id;
-        upsert.run(
-          id,
-          task.roll_no,
-          task.task_description,
-          task.skill_applied,
-          task.project_name,
-          task.progress,
-          task.proof,
-          task.week_date,
-          task.is_hidden ? 1 : 0
-        );
+      if (isNew) {
+        await sql`
+          INSERT INTO tasks (roll_no, task_description, skill_applied, project_name, progress, proof, week_date, is_hidden)
+          VALUES (${task.roll_no}, ${task.task_description}, ${task.skill_applied}, ${task.project_name}, ${task.progress}, ${task.proof}, ${task.week_date}, ${task.is_hidden ? 1 : 0})
+        `;
+      } else {
+        await sql`
+          INSERT INTO tasks (id, roll_no, task_description, skill_applied, project_name, progress, proof, week_date, is_hidden)
+          VALUES (${task.id}, ${task.roll_no}, ${task.task_description}, ${task.skill_applied}, ${task.project_name}, ${task.progress}, ${task.proof}, ${task.week_date}, ${task.is_hidden ? 1 : 0})
+          ON CONFLICT (id) DO UPDATE SET
+            roll_no = EXCLUDED.roll_no,
+            task_description = EXCLUDED.task_description,
+            skill_applied = EXCLUDED.skill_applied,
+            project_name = EXCLUDED.project_name,
+            progress = EXCLUDED.progress,
+            proof = EXCLUDED.proof,
+            week_date = EXCLUDED.week_date,
+            is_hidden = EXCLUDED.is_hidden
+        `;
       }
-    });
+    }
 
-    transaction(tasks);
     return NextResponse.json({ message: 'Tasks updated successfully' });
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('POST Tasks Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
@@ -90,15 +95,14 @@ export async function POST(request) {
  */
 export async function DELETE(request) {
   try {
-    const db = (await import('@/lib/db')).default;
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
-    
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
 
-    db.prepare('DELETE FROM tasks WHERE id = ?').run(id);
+    await sql`DELETE FROM tasks WHERE id = ${id}`;
     return NextResponse.json({ message: 'Task deleted' });
   } catch (error) {
+    console.error('DELETE Task Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
