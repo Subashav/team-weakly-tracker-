@@ -80,7 +80,7 @@ export default function TeamTracker() {
 
   const fetchTasks = async (adminMode = isAdmin, memberFilter = selectedUser) => {
     try {
-      let url = `/api/tasks?admin=${adminMode}`;
+      let url = `/api/tasks?admin=${adminMode}&t=${Date.now()}`;
       if (memberFilter !== 'All Members') url += `&name=${encodeURIComponent(memberFilter)}`;
       const res = await fetch(url);
       const data = await res.json();
@@ -94,11 +94,15 @@ export default function TeamTracker() {
 
   const fetchMembers = async () => {
     try {
-      const res = await fetch('/api/members');
+      const res = await fetch(`/api/members?t=${Date.now()}`);
       const data = await res.json();
-      setMembers(Array.isArray(data) ? data : []);
+      if (res.ok && Array.isArray(data)) {
+        setMembers(data);
+      } else {
+        console.error('Failed to load members:', data);
+      }
     } catch (err) {
-      console.error(err);
+      console.error('Members fetch error:', err);
     }
   };
 
@@ -329,13 +333,46 @@ export default function TeamTracker() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: '1rem', marginBottom: '2rem' }}>
               <input className="glass-input" placeholder="Name" value={newMemberName} onChange={(e) => setNewMemberName(e.target.value)} />
               <input className="glass-input" placeholder="Role" value={newMemberRole} onChange={(e) => setNewMemberRole(e.target.value)} />
-              <button className="btn btn-primary" onClick={async () => { if (!newMemberName) return; await fetch('/api/members', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ name: newMemberName, role: newMemberRole }) }); setNewMemberName(''); setNewMemberRole(''); fetchMembers(); }}><Plus size={20} /></button>
+              <button className="btn btn-primary" onClick={async () => { 
+                if (!newMemberName) return; 
+                try {
+                  const res = await fetch('/api/members', { 
+                    method: 'POST', 
+                    headers: {'Content-Type': 'application/json'}, 
+                    body: JSON.stringify({ name: newMemberName, role: newMemberRole }) 
+                  });
+                  if (!res.ok) {
+                    const errorData = await res.json();
+                    alert(`Registry Update Failed: ${errorData.error || 'Unknown error'}`);
+                    return;
+                  }
+                  setNewMemberName(''); 
+                  setNewMemberRole(''); 
+                  fetchMembers(); 
+                } catch (err) {
+                  alert(`Network error: ${err.message}`);
+                }
+              }}><Plus size={20} /></button>
             </div>
             <div style={{ maxHeight: '350px', overflowY: 'auto' }}>
               {members.map(m => (
                 <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)', marginBottom: '8px' }}>
                   <div><div style={{ fontWeight: '700' }}>{m.name}</div><div className="label-small">{m.role?.toUpperCase()}</div></div>
-                  <button style={{ background: 'none', border: 'none', color: '#ef4444' }} onClick={async () => { if(confirm('Remove?')){ await fetch(`/api/members?id=${m.id}`, {method: 'DELETE'}); fetchMembers(); } }}><Trash2 size={16} /></button>
+                  <button style={{ background: 'none', border: 'none', color: '#ef4444' }} onClick={async () => { 
+                    if(confirm('Remove?')){ 
+                      try {
+                        const res = await fetch(`/api/members?id=${m.id}`, {method: 'DELETE'}); 
+                        if (res.ok) {
+                          fetchMembers();
+                        } else {
+                          const errorData = await res.json();
+                          alert(`Deletion failed: ${errorData.error}`);
+                        }
+                      } catch (err) {
+                        alert(`Network error: ${err.message}`);
+                      }
+                    } 
+                  }}><Trash2 size={16} /></button>
                 </div>
               ))}
             </div>

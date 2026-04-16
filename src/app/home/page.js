@@ -36,7 +36,7 @@ export default function HomePage() {
 
   const fetchMembers = async () => {
     try {
-      const res = await fetch('/api/members');
+      const res = await fetch(`/api/members?t=${Date.now()}`);
       const data = await res.json();
       setMembers(Array.isArray(data) ? data : []);
     } catch (err) {
