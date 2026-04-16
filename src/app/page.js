@@ -26,7 +26,6 @@ import {
   Home
 } from 'lucide-react';
 import StarBorder from '../components/StarBorder';
-import Bubbles from '../components/Bubbles';
 
 export default function TeamTracker() {
   const router = useRouter();
@@ -144,10 +143,7 @@ export default function TeamTracker() {
   if (!user) return null; // Prevent flicker
 
   return (
-    <div style={{ position: 'relative', minHeight: '100vh' }}>
-      {/* Floating bubbles background */}
-      <Bubbles />
-    <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+    <div className="container">
       {/* Enterprise Navigation */}
       <nav className="glass-card animate-fade-in" style={{ padding: '0.75rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -339,7 +335,6 @@ export default function TeamTracker() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         select option { background: #0c111d; color: white; }
       `}</style>
-    </div>
     </div>
   );
 }
