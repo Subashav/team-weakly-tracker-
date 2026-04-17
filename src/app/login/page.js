@@ -53,9 +53,10 @@ export default function LoginPage() {
   const effectOptions = useMemo(() => HYPERSPEED_OPTIONS, []);
 
   useEffect(() => {
-     // Pre-populate based on mode for easier demo testing
-     setUsername(roleMode);
-     setPassword(roleMode === 'admin' ? 'admin123' : 'user123');
+     // Clear fields when switching roles
+     setUsername('');
+     setPassword('');
+     setError('');
   }, [roleMode]);
 
   const handleLogin = async (e) => {
@@ -130,6 +131,7 @@ export default function LoginPage() {
                 className="glass-input" 
                 style={{ paddingLeft: '38px', width: '100%' }}
                 placeholder="Username"
+                autoComplete="off"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
               />
@@ -145,6 +147,7 @@ export default function LoginPage() {
                 className="glass-input" 
                 style={{ paddingLeft: '38px', width: '100%' }}
                 placeholder="Password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
